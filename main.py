@@ -147,6 +147,18 @@ async def sendGrid(grid, channel):
     await lastmessage.add_reaction("9️⃣")
     await lastmessage.add_reaction("♻️")
 
+async def sendFullInformation(channel, grid):
+    await channel.send(channel.guild.get_member_named(
+        f"{grid.player1.name}#{grid.player1.discriminator}").mention + " " + channel.guild.get_member_named(
+        f"{grid.player2.name}#{grid.player2.discriminator}").mention + "\nNiemand hat gewonnen. Eure Statistiken werden nicht geändert!")
+    addStatsToDB("none", channel.guild.get_member_named(f"{grid.player1.name}#{grid.player1.discriminator}"))
+    addStatsToDB("none", channel.guild.get_member_named(f"{grid.player2.name}#{grid.player2.discriminator}"))
+    await removePlayerFromLists(
+        channel.guild.get_member_named(grid.player1.name + "#" + grid.player1.discriminator))
+    await removePlayerFromLists(
+        channel.guild.get_member_named(grid.player2.name + "#" + grid.player2.discriminator))
+    return
+
 
 async def makeTurn(cell, channel, member):
     if not member in ingameplayer:
@@ -165,13 +177,7 @@ async def makeTurn(cell, channel, member):
         return
     print("check for full")
     if isFull(grid) == True:
-        print("isfull")
-        await channel.send(channel.guild.get_member_named(
-            f"{grid.player1.name}#{grid.player1.discriminator}").mention + " " + channel.guild.get_member_named(
-            f"{grid.player2.name}#{grid.player2.discriminator}").mention + "\nNiemand hat gewonnen. Eure Statistiken werden nicht geändert!")
-        addStatsToDB("none", channel.guild.get_member_named(f"{grid.player1.name}#{grid.player1.discriminator}"))
-        addStatsToDB("none", channel.guild.get_member_named(f"{grid.player2.name}#{grid.player2.discriminator}"))
-        return
+        await sendFullInformation(channel, grid)
     if not grid.turn(cell, active):
         await channel.send('Deine Auswahl konnte nicht ausgeführt werden!')
         await sendGrid(grid, channel)
@@ -190,14 +196,9 @@ async def makeTurn(cell, channel, member):
         await removePlayerFromLists(
             channel.guild.get_member_named(grid.player2.name + "#" + grid.player2.discriminator))
         return False
-    if isFull(grid) == True:
-        print("isfull")
-        await channel.send(channel.guild.get_member_named(
-            f"{grid.player1.name}#{grid.player1.discriminator}").mention + " " + channel.guild.get_member_named(
-            f"{grid.player2.name}#{grid.player2.discriminator}").mention + "\nNiemand hat gewonnen. Eure Statistiken werden nicht geändert!")
-        addStatsToDB("none", channel.guild.get_member_named(f"{grid.player1.name}#{grid.player1.discriminator}"))
-        addStatsToDB("none", channel.guild.get_member_named(f"{grid.player2.name}#{grid.player2.discriminator}"))
-        return
+    if isFull(grid):
+        await sendFullInformation(channel, grid)
+
     if grid.active == grid.player1:
         grid.active = grid.player2
         await channel.send(channel.guild.get_member_named(
