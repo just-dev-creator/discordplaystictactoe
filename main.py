@@ -4,6 +4,10 @@ import gamestate
 import pymongo
 import datetime
 import time
+from discord_slash import SlashCommand, SlashContext
+from dotenv import load_dotenv
+
+load_dotenv()
 
 """You can invite this bot! Here's the link: https://discord.com/api/oauth2/authorize?client_id=811267001238159420
 &permissions=2112&scope=bot It only requires the permissions of Sending Messages and Adding reactions. Use the 
@@ -476,4 +480,19 @@ connect_to_mongodb()
 intents = discord.Intents.default()
 intents.members = True
 client = DcClient(intents=intents)
+slash = SlashCommand(client, sync_commands=True)
+
+
+@slash.slash(name="challenge", guild_ids=[703266392295604254], description="Fordere einen User zu einem Duell heraus!", options=[
+    {
+        "name": "opponent",
+        "description": "Specify the opponent you want to fight against",
+        "type": 6,
+        "required": True
+    }
+])
+async def _test(ctx: SlashContext, user: discord.User):
+    await ctx.send(content=user.name + '#' + user.discriminator, hidden=True)
+
+
 client.run(token)
