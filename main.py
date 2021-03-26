@@ -5,13 +5,10 @@ import pymongo
 import datetime
 import time
 
-"""
-You can invite this bot! 
-Here's the link: https://discord.com/api/oauth2/authorize?client_id=811267001238159420&permissions=2112&scope=bot
-It only requires the permissions of Sending Messages and Adding reactions. Use the following commands: &challenge <tag user> and &stats.
-This project is licensed
-Please read license information: license.txt
-"""
+"""You can invite this bot! Here's the link: https://discord.com/api/oauth2/authorize?client_id=811267001238159420
+&permissions=2112&scope=bot It only requires the permissions of Sending Messages and Adding reactions. Use the 
+following commands: &challenge <tag user> and &stats. This project is licensed Please read license information: 
+license.txt """
 
 token = os.environ['TOKEN']
 playergrids = {}
@@ -24,7 +21,7 @@ mongodb = None
 mongocollection = None
 
 
-async def removePlayerFromLists(user):
+async def remove_player_from_list(user):
     try:
         ingameplayer.remove(user)
         playergrids.pop(user)
@@ -34,7 +31,7 @@ async def removePlayerFromLists(user):
         print("There was an error by removing the player from the list. ")
 
 
-def connectToMongoDB():
+def connect_to_mongodb():
     global mongoclient
     global mongodb
     global mongocollection
@@ -43,83 +40,83 @@ def connectToMongoDB():
     mongocollection = mongodb["userstats"]
 
 
-def addStatsToDB(isLoseOrWin, user):
-    if isLoseOrWin == "win":
+def add_stats_do_db(is_lose_or_win, user):
+    if is_lose_or_win == "win":
         found = mongocollection.find_one({"userid": user.id})
-        if found == None:
+        if found is None:
             mongocollection.insert_one({
                 "userid": user.id,
                 "wins": 1,
                 "loses": 0
             })
         else:
-            if not "wins" in found:
-                newvalues = {"$set": {
+            if "wins" not in found:
+                new_values = {"$set": {
                     "wins": 1
                 }}
-                mongocollection.update_one(found, newvalues)
+                mongocollection.update_one(found, new_values)
             else:
                 wins = found["wins"]
                 wins += 1
-                newvalues = {"$set": {
+                new_values = {"$set": {
                     "wins": wins
                 }}
-                mongocollection.update_one(found, newvalues)
-    elif isLoseOrWin == "lose":
+                mongocollection.update_one(found, new_values)
+    elif is_lose_or_win == "lose":
         found = mongocollection.find_one({"userid": user.id})
-        if found == None:
+        if found is None:
             mongocollection.insert_one({
                 "userid": user.id,
                 "wins": 0,
                 "loses": 1
             })
         else:
-            if not "loses" in found:
-                newvalues = {"$set": {"loses": 1}}
-                mongocollection.update_one(found, newvalues)
+            if "loses" not in found:
+                new_values = {"$set": {"loses": 1}}
+                mongocollection.update_one(found, new_values)
             else:
                 loses = found["loses"]
                 loses += 1
-                newvalues = {"$set": {
+                new_values = {"$set": {
                     "loses": loses
                 }}
-                mongocollection.update_one(found, newvalues)
+                mongocollection.update_one(found, new_values)
 
     found = mongocollection.find_one({
         "userid": user.id
     })
-    if found == None:
+    if found is None:
         mongocollection.insert_one({
             "playedgames": 1
         })
     else:
-        if not "playedgames" in found:
-            newvalues = {"$set": {
+        if "playedgames" not in found:
+            new_values = {"$set": {
                 "playedgames": 1
             }}
         else:
             played = found["playedgames"]
             played += 1
-            newvalues = {"$set": {
+            new_values = {"$set": {
                 "playedgames": played
             }}
-            mongocollection.update_one(found, newvalues)
+        mongocollection.update_one(found, new_values)
 
 
-def getStatsFromDB(isLoseOrWin, user):
-    if isLoseOrWin == "win":
+def get_stats_from_db(is_lose_or_win, user):
+    if is_lose_or_win == "win":
         found = mongocollection.find_one({"userid": user.id})
-        if found == None or not "wins" in found:
+        if found is None or "wins" not in found:
             return 0
         return found["wins"]
-    if isLoseOrWin == "lose":
+    if is_lose_or_win == "lose":
         found = mongocollection.find_one({"userid": user.id})
-        if found == None or not "loses" in found:
+        if found is None or "loses" not in found:
             return 0
         return found["loses"]
 
 
-def isFull(grid):
+def is_full(grid):
     for i in grid.state:
         if i == 0:
             return False
@@ -127,13 +124,10 @@ def isFull(grid):
     return True
 
 
-async def sendGrid(grid, channel):
+async def send_grid(grid, channel):
     message = ""
     for line in grid.getBoardForMessageAsList():
         message = message + line + "\n"
-
-    if datetime.datetime.today().strftime('%Y-%m-%d') == "2021-02-18":
-        message = message + "\n:nasa: Landen eines Rovers auf dem Mars heute ab 21.45 Uhr [hier](https://www.twitch.tv/nasa)"
 
     lastmessage = await channel.send(message)
     await lastmessage.add_reaction("1️⃣")
@@ -147,21 +141,23 @@ async def sendGrid(grid, channel):
     await lastmessage.add_reaction("9️⃣")
     await lastmessage.add_reaction("♻️")
 
-async def sendFullInformation(channel, grid):
+
+async def send_full_information(channel, grid):
     await channel.send(channel.guild.get_member_named(
         f"{grid.player1.name}#{grid.player1.discriminator}").mention + " " + channel.guild.get_member_named(
-        f"{grid.player2.name}#{grid.player2.discriminator}").mention + "\nNiemand hat gewonnen. Eure Statistiken werden nicht geändert!")
-    addStatsToDB("none", channel.guild.get_member_named(f"{grid.player1.name}#{grid.player1.discriminator}"))
-    addStatsToDB("none", channel.guild.get_member_named(f"{grid.player2.name}#{grid.player2.discriminator}"))
-    await removePlayerFromLists(
+        f"{grid.player2.name}#{grid.player2.discriminator}").mention + "\nNiemand hat gewonnen. Eure Statistiken "
+                                                                       "werden nicht geändert!")
+    add_stats_do_db("none", channel.guild.get_member_named(f"{grid.player1.name}#{grid.player1.discriminator}"))
+    add_stats_do_db("none", channel.guild.get_member_named(f"{grid.player2.name}#{grid.player2.discriminator}"))
+    await remove_player_from_list(
         channel.guild.get_member_named(grid.player1.name + "#" + grid.player1.discriminator))
-    await removePlayerFromLists(
+    await remove_player_from_list(
         channel.guild.get_member_named(grid.player2.name + "#" + grid.player2.discriminator))
     return
 
 
-async def makeTurn(cell, channel, member):
-    if not member in ingameplayer:
+async def make_turn(cell, channel, member):
+    if member not in ingameplayer:
         await channel.send(member.mention + "\nDu bist momentan in keinem Match!")
         return False
     cell = int(cell)
@@ -176,28 +172,28 @@ async def makeTurn(cell, channel, member):
         await channel.send(member.mention + "\nDu bist noch nicht dran!")
         return
     print("check for full")
-    if isFull(grid) == True:
-        await sendFullInformation(channel, grid)
+    if is_full(grid):
+        await send_full_information(channel, grid)
     if not grid.turn(cell, active):
         await channel.send('Deine Auswahl konnte nicht ausgeführt werden!')
-        await sendGrid(grid, channel)
+        await send_grid(grid, channel)
         return False
     if grid.checkForWin(active):
         await channel.send(channel.guild.get_member_named(
             f"{grid.active.name}#{grid.active.discriminator}").mention + '\nYou win! Setze Board zurück!')
         if active == grid.player1:
-            addStatsToDB("win", channel.guild.get_member_named(f"{active.name}#{active.discriminator}"))
-            addStatsToDB("lose", channel.guild.get_member_named(f"{grid.player1.name}#{grid.player1.discriminator}"))
+            add_stats_do_db("win", channel.guild.get_member_named(f"{active.name}#{active.discriminator}"))
+            add_stats_do_db("lose", channel.guild.get_member_named(f"{grid.player1.name}#{grid.player1.discriminator}"))
         else:
-            addStatsToDB("win", channel.guild.get_member_named(f"{active.name}#{active.discriminator}"))
-            addStatsToDB("lose", channel.guild.get_member_named(f"{grid.player2.name}#{grid.player2.discriminator}"))
-        await removePlayerFromLists(
+            add_stats_do_db("win", channel.guild.get_member_named(f"{active.name}#{active.discriminator}"))
+            add_stats_do_db("lose", channel.guild.get_member_named(f"{grid.player2.name}#{grid.player2.discriminator}"))
+        await remove_player_from_list(
             channel.guild.get_member_named(grid.player1.name + "#" + grid.player1.discriminator))
-        await removePlayerFromLists(
+        await remove_player_from_list(
             channel.guild.get_member_named(grid.player2.name + "#" + grid.player2.discriminator))
         return False
-    if isFull(grid):
-        await sendFullInformation(channel, grid)
+    if is_full(grid):
+        await send_full_information(channel, grid)
 
     if grid.active == grid.player1:
         grid.active = grid.player2
@@ -207,7 +203,7 @@ async def makeTurn(cell, channel, member):
         grid.active = grid.player1
         await channel.send(channel.guild.get_member_named(
             grid.player1.name + "#" + grid.player1.discriminator).mention + ", du bist jetzt dran!")
-    await sendGrid(grid, channel)
+    await send_grid(grid, channel)
 
 
 class DcClient(discord.Client):
@@ -223,84 +219,84 @@ class DcClient(discord.Client):
         if message.content == 'ping':
             await message.channel.send('Pong!')
         elif message.content == '1':
-            if (await makeTurn(1, message.channel, message.author)):
+            if await make_turn(1, message.channel, message.author):
                 grid = None
                 if "{}#{}".format(user.name, user.discriminator) in playergrids:
                     grid = playergrids["{}#{}".format(user.name, user.discriminator)]
                 elif user in opponents:
                     grid = playergrids["{}#{}".format(opponents[user].name, opponents[user].discriminator)]
-                await sendGrid(grid, message.channel)
+                await send_grid(grid, message.channel)
         elif message.content == '2':
-            if await makeTurn(2, message.channel, message.author):
+            if await make_turn(2, message.channel, message.author):
                 grid = None
                 if "{}#{}".format(user.name, user.discriminator) in playergrids:
                     grid = playergrids["{}#{}".format(user.name, user.discriminator)]
                 elif user in opponents:
                     grid = playergrids["{}#{}".format(opponents[user].name, opponents[user].discriminator)]
-                await sendGrid(grid, message.channel)
+                await send_grid(grid, message.channel)
 
         elif message.content == '3':
-            if await makeTurn(3, message.channel, message.author):
+            if await make_turn(3, message.channel, message.author):
                 grid = None
                 if "{}#{}".format(user.name, user.discriminator) in playergrids:
                     grid = playergrids["{}#{}".format(user.name, user.discriminator)]
                 elif user in opponents:
                     grid = playergrids["{}#{}".format(opponents[user].name, opponents[user].discriminator)]
-                await sendGrid(grid, message.channel)
+                await send_grid(grid, message.channel)
 
         elif message.content == '4':
-            if await makeTurn(4, message.channel, message.author):
+            if await make_turn(4, message.channel, message.author):
                 grid = None
                 if "{}#{}".format(user.name, user.discriminator) in playergrids:
                     grid = playergrids["{}#{}".format(user.name, user.discriminator)]
                 elif user in opponents:
                     grid = playergrids["{}#{}".format(opponents[user].name, opponents[user].discriminator)]
-                await sendGrid(grid, message.channel)
+                await send_grid(grid, message.channel)
 
         elif message.content == '5':
-            if await makeTurn(5, message.channel, message.author):
+            if await make_turn(5, message.channel, message.author):
                 grid = None
                 if "{}#{}".format(user.name, user.discriminator) in playergrids:
                     grid = playergrids["{}#{}".format(user.name, user.discriminator)]
                 elif user in opponents:
                     grid = playergrids["{}#{}".format(opponents[user].name, opponents[user].discriminator)]
-                await sendGrid(grid, message.channel)
+                await send_grid(grid, message.channel)
 
         elif message.content == '6':
-            if await makeTurn(6, message.channel, message.author):
+            if await make_turn(6, message.channel, message.author):
                 grid = None
                 if "{}#{}".format(user.name, user.discriminator) in playergrids:
                     grid = playergrids["{}#{}".format(user.name, user.discriminator)]
                 elif user in opponents:
                     grid = playergrids["{}#{}".format(opponents[user].name, opponents[user].discriminator)]
-                await sendGrid(grid, message.channel)
+                await send_grid(grid, message.channel)
 
         elif message.content == '7':
-            if await makeTurn(7, message.channel, message.author):
+            if await make_turn(7, message.channel, message.author):
                 grid = None
                 if "{}#{}".format(user.name, user.discriminator) in playergrids:
                     grid = playergrids["{}#{}".format(user.name, user.discriminator)]
                 elif user in opponents:
                     grid = playergrids["{}#{}".format(opponents[user].name, opponents[user].discriminator)]
-                await sendGrid(grid, message.channel)
+                await send_grid(grid, message.channel)
 
         elif message.content == '8':
-            if await makeTurn(8, message.channel, message.author):
+            if await make_turn(8, message.channel, message.author):
                 grid = None
                 if "{}#{}".format(user.name, user.discriminator) in playergrids:
                     grid = playergrids["{}#{}".format(user.name, user.discriminator)]
                 elif user in opponents:
                     grid = playergrids["{}#{}".format(opponents[user].name, opponents[user].discriminator)]
-                await sendGrid(grid, message.channel)
+                await send_grid(grid, message.channel)
 
         elif message.content == '9':
-            if await makeTurn(9, message.channel, message.author):
+            if await make_turn(9, message.channel, message.author):
                 grid = None
                 if "{}#{}".format(user.name, user.discriminator) in playergrids:
                     grid = playergrids["{}#{}".format(user.name, user.discriminator)]
                 elif user in opponents:
                     grid = playergrids["{}#{}".format(opponents[user].name, opponents[user].discriminator)]
-                await sendGrid(grid, message.channel)
+                await send_grid(grid, message.channel)
 
         elif message.content.startswith(prefix + "challenge"):
             args = message.content.split(" ")
@@ -328,21 +324,21 @@ class DcClient(discord.Client):
                                   timestamp=datetime.datetime.utcfromtimestamp(time.time()))
             embed.set_footer(text="justCoding TicTacToe")
             embed.add_field(name="🏆",
-                            value="Anzahl der gewonnen Runden: " + str(getStatsFromDB("win", message.author)))
+                            value="Anzahl der gewonnen Runden: " + str(get_stats_from_db("win", message.author)))
             embed.add_field(name="💩",
-                            value="Anzahl der verloreren Runden: " + str(getStatsFromDB("lose", message.author)))
+                            value="Anzahl der verloreren Runden: " + str(get_stats_from_db("lose", message.author)))
 
-            if getStatsFromDB("lose", message.author) == 0:
+            if get_stats_from_db("lose", message.author) == 0:
                 embed.add_field(name="🔄",
-                                value="Die K/D des Users beträgt: " + str(getStatsFromDB("win", message.author)))
+                                value="Die K/D des Users beträgt: " + str(get_stats_from_db("win", message.author)))
             else:
                 embed.add_field(name="🔄", value="Die K/D des Users beträgt: " + str(
-                    getStatsFromDB("win", message.author) / getStatsFromDB("lose", message.author)))
+                    get_stats_from_db("win", message.author) / get_stats_from_db("lose", message.author)))
 
             await message.channel.send(content=f"{user.mention}", embed=embed)
 
         elif message.content == "super_geheim":
-            addStatsToDB("win", message.author)
+            add_stats_do_db("win", message.author)
 
     async def on_reaction_add(self, reaction, user):
         if user == self.user:
@@ -353,72 +349,72 @@ class DcClient(discord.Client):
                 grid = playergrids["{}#{}".format(user.name, user.discriminator)]
             elif user in opponents:
                 grid = playergrids["{}#{}".format(opponents[user].name, opponents[user].discriminator)]
-            if await makeTurn(1, reaction.message.channel, user):
-                await sendGrid(grid, reaction.message.channel)
+            if await make_turn(1, reaction.message.channel, user):
+                await send_grid(grid, reaction.message.channel)
         elif reaction.emoji == "2️⃣":
-            if await makeTurn(2, reaction.message.channel, user):
+            if await make_turn(2, reaction.message.channel, user):
                 grid = None
                 if "{}#{}".format(user.name, user.discriminator) in playergrids:
                     grid = playergrids["{}#{}".format(user.name, user.discriminator)]
                 elif user in opponents:
                     grid = playergrids["{}#{}".format(opponents[user].name, opponents[user].discriminator)]
-                await sendGrid(grid, reaction.message.channel)
+                await send_grid(grid, reaction.message.channel)
         elif reaction.emoji == "3️⃣":
-            if await makeTurn(3, reaction.message.channel, user):
+            if await make_turn(3, reaction.message.channel, user):
                 grid = None
                 if "{}#{}".format(user.name, user.discriminator) in playergrids:
                     grid = playergrids["{}#{}".format(user.name, user.discriminator)]
                 elif user in opponents:
                     grid = playergrids["{}#{}".format(opponents[user].name, opponents[user].discriminator)]
-                await sendGrid(grid, reaction.message.channel)
+                await send_grid(grid, reaction.message.channel)
         elif reaction.emoji == "4️⃣":
-            if await makeTurn(4, reaction.message.channel, user):
+            if await make_turn(4, reaction.message.channel, user):
                 grid = None
                 if "{}#{}".format(user.name, user.discriminator) in playergrids:
                     grid = playergrids["{}#{}".format(user.name, user.discriminator)]
                 elif user in opponents:
                     grid = playergrids["{}#{}".format(opponents[user].name, opponents[user].discriminator)]
-                await sendGrid(grid, reaction.message.channel)
+                await send_grid(grid, reaction.message.channel)
         elif reaction.emoji == "5️⃣":
-            if await makeTurn(5, reaction.message.channel, user):
+            if await make_turn(5, reaction.message.channel, user):
                 grid = None
                 if "{}#{}".format(user.name, user.discriminator) in playergrids:
                     grid = playergrids["{}#{}".format(user.name, user.discriminator)]
                 elif user in opponents:
                     grid = playergrids["{}#{}".format(opponents[user].name, opponents[user].discriminator)]
-                await sendGrid(grid, reaction.message.channel)
+                await send_grid(grid, reaction.message.channel)
         elif reaction.emoji == "6️⃣":
-            if await makeTurn(6, reaction.message.channel, user):
+            if await make_turn(6, reaction.message.channel, user):
                 grid = None
                 if "{}#{}".format(user.name, user.discriminator) in playergrids:
                     grid = playergrids["{}#{}".format(user.name, user.discriminator)]
                 elif user in opponents:
                     grid = playergrids["{}#{}".format(opponents[user].name, opponents[user].discriminator)]
-                await sendGrid(grid, reaction.message.channel)
+                await send_grid(grid, reaction.message.channel)
         elif reaction.emoji == "7️⃣":
-            if await makeTurn(7, reaction.message.channel, user):
+            if await make_turn(7, reaction.message.channel, user):
                 grid = None
                 if "{}#{}".format(user.name, user.discriminator) in playergrids:
                     grid = playergrids["{}#{}".format(user.name, user.discriminator)]
                 elif user in opponents:
                     grid = playergrids["{}#{}".format(opponents[user].name, opponents[user].discriminator)]
-                await sendGrid(grid, reaction.message.channel)
+                await send_grid(grid, reaction.message.channel)
         elif reaction.emoji == "8️⃣":
-            if await makeTurn(8, reaction.message.channel, user):
+            if await make_turn(8, reaction.message.channel, user):
                 grid = None
                 if "{}#{}".format(user.name, user.discriminator) in playergrids:
                     grid = playergrids["{}#{}".format(user.name, user.discriminator)]
                 elif user in opponents:
                     grid = playergrids["{}#{}".format(opponents[user].name, opponents[user].discriminator)]
-                await sendGrid(grid, reaction.message.channel)
+                await send_grid(grid, reaction.message.channel)
         elif reaction.emoji == "9️⃣":
-            if await makeTurn(9, reaction.message.channel, user):
+            if await make_turn(9, reaction.message.channel, user):
                 grid = None
                 if "{}#{}".format(user.name, user.discriminator) in playergrids:
                     grid = playergrids["{}#{}".format(user.name, user.discriminator)]
                 elif user in opponents:
                     grid = playergrids["{}#{}".format(opponents[user].name, opponents[user].discriminator)]
-                await sendGrid(grid, reaction.message.channel)
+                await send_grid(grid, reaction.message.channel)
         elif reaction.emoji == "♻️":
             grid = None
             if "{}#{}".format(user.name, user.discriminator) in playergrids:
@@ -427,16 +423,16 @@ class DcClient(discord.Client):
                 grid = playergrids["{}#{}".format(opponents[user].name, opponents[user].discriminator)]
             if user == reaction.message.channel.guild.get_member_named(
                     grid.player1.name + "#" + grid.player1.discriminator):
-                addStatsToDB("win", reaction.message.channel.guild.get_member_named(
+                add_stats_do_db("win", reaction.message.channel.guild.get_member_named(
                     grid.player2.name + "#" + grid.player2.discriminator))
-                addStatsToDB("lose", user)
+                add_stats_do_db("lose", user)
             else:
-                addStatsToDB("win", reaction.message.channel.guild.get_member_named(
+                add_stats_do_db("win", reaction.message.channel.guild.get_member_named(
                     grid.player1.name + "#" + grid.player1.discriminator))
-                addStatsToDB("lose", user)
-            await removePlayerFromLists(
+                add_stats_do_db("lose", user)
+            await remove_player_from_list(
                 reaction.message.channel.guild.get_member_named(grid.player1.name + "#" + grid.player1.discriminator))
-            await removePlayerFromLists(
+            await remove_player_from_list(
                 reaction.message.channel.guild.get_member_named(grid.player2.name + "#" + grid.player2.discriminator))
 
         elif reaction.emoji == "✅":
@@ -475,10 +471,10 @@ class DcClient(discord.Client):
                                                                                    userplayers[target],
                                                                                    reaction.message.channel)
             })
-            await sendGrid(playergrids["{}#{}".format(user.name, user.discriminator)], reaction.message.channel)
+            await send_grid(playergrids["{}#{}".format(user.name, user.discriminator)], reaction.message.channel)
 
 
-connectToMongoDB()
+connect_to_mongodb()
 intents = discord.Intents.default()
 intents.members = True
 client = DcClient(intents=intents)
