@@ -171,7 +171,6 @@ async def make_turn(cell, channel, member):
     if member != channel.guild.get_member_named(grid.active.name + "#" + grid.active.discriminator):
         await channel.send(member.mention + "\nDu bist noch nicht dran!")
         return
-    print("check for full")
     if is_full(grid):
         await send_full_information(channel, grid)
     if not grid.turn(cell, active):
@@ -311,7 +310,6 @@ class DcClient(discord.Client):
                         message.author.mention + "\nDu hast eine Rolle makiert! Dies ist nicht möglich!")
                     return
                 opponent = int(opponent)
-                print(opponent)
                 target = message.channel.guild.get_member(opponent)
                 reac_mes = await message.channel.send(
                     target.mention + ", du wurdest von " + message.author.mention + " herausgefordert! Benutze die Reaktionen!")
