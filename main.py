@@ -447,12 +447,12 @@ class DcClient(discord.Client):
             target = reaction.message.channel.guild.get_member(opponent)
             if target == user:
                 await reaction.message.channel.send(
-                    user.mention + "\nDu kannst dich nicht selber herausfordern. Nutze vielleicht den irgendwann erscheinenden KI-Modus!")
+                    user.mention + "\nDu kannst dich nicht selber herausfordern. Nutze doch den [KI-Modus](https://www.youtube.com/watch?v=dQw4w9WgXcQ).")
                 return
 
             if target in ingameplayer:
                 await reaction.message.channel.send(
-                    user.mention + "\nDer User, den du herausgefordert hast, ist bereits in einem Match!")
+                    user.mention + "\nDer User, den du herausgefordert hast, ist bereits in einem Match! Sollte dies ein Fehler sein, klicke [hier](https://www.youtube.com/watch?v=dQw4w9WgXcQ)")
                 return
 
             userplayers.update({
