@@ -542,7 +542,7 @@ client = DcClient(intents=intents)
 slash = SlashCommand(client, sync_commands=True)
 
 
-@slash.slash(name="challenge", guild_ids=[703266392295604254], description="Fordere einen User zu einem Duell heraus!",
+@slash.slash(name="challenge", guild_ids=None, description="Fordere einen User zu einem Duell heraus!",
              options=[
                  {
                      "name": "opponent",
@@ -555,7 +555,7 @@ async def _challenge(ctx: SlashContext, user: discord.User):
     await send_invite(ctx=ctx, user=user)
 
 
-@slash.slash(name="stats", guild_ids=[703266392295604254], description="Zeige deine Statistiken an!", options=[
+@slash.slash(name="stats", guild_ids=None, description="Zeige deine Statistiken an!", options=[
     {
         "name": "user",
         "description": "Der User, von dem du die Stats erhalten möchtest.",
