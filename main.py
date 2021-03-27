@@ -6,6 +6,7 @@ import datetime
 import time
 from discord_slash import SlashCommand, SlashContext
 from dotenv import load_dotenv
+import discord.ext
 
 load_dotenv()
 
@@ -209,6 +210,57 @@ async def make_turn(cell, channel, member):
     await send_grid(grid, channel)
 
 
+async def send_invite(args=None, ctx: SlashContext = None, message: discord.Message = None, user: discord.User = None):
+    if ctx is None and message is None:
+        raise Exception("One of the arguments must be specified!")
+    elif message:
+        if not args:
+            raise Exception("When message is specified, args must be specified too.")
+        # args = message.content.split(" ")
+        if not len(args) == 2:
+            await message.channel.send(message.author.mention + "\nDu hast keine Gegner angegeben!")
+        else:
+            opponent = (args[1].replace('<@', '').replace('>', ''))
+            if "!" in opponent:
+                opponent = opponent.replace('!', '')
+            if "&" in opponent:
+                await message.channel.send(
+                    message.author.mention + "\nDu hast eine Rolle makiert! Dies ist nicht möglich!")
+                return
+            opponent = int(opponent)
+            target = message.channel.guild.get_member(opponent)
+            reac_mes = await message.channel.send(
+                target.mention + ", du wurdest von " + message.author.mention + " herausgefordert! Benutze die Reaktionen!")
+            await reac_mes.add_reaction("✅")
+            await reac_mes.add_reaction("✖")
+    elif ctx:
+        if not user:
+            raise Exception("When SlashContext is specified, user must be specified too.")
+        reac_mes = await ctx.send(
+            user.mention + ", du wurdest von " + ctx.author.mention + " herausgefordert! Benutze die Reaktionen!")
+        await reac_mes.add_reaction("✅")
+        await reac_mes.add_reaction("✖")
+
+
+async def get_stats_embed(user: discord.User):
+    embed = discord.Embed(title=f"Statistiken für {user.name}#{user.discriminator}",
+                          colour=discord.Colour(0xa6f008), description="Folgend die Statistiken!",
+                          timestamp=datetime.datetime.utcfromtimestamp(time.time()))
+    embed.set_footer(text="justCoding TicTacToe")
+    embed.add_field(name="🏆",
+                    value="Anzahl der gewonnen Runden: " + str(get_stats_from_db("win", user)))
+    embed.add_field(name="💩",
+                    value="Anzahl der verloreren Runden: " + str(get_stats_from_db("lose", user)))
+
+    if get_stats_from_db("lose", user) == 0:
+        embed.add_field(name="🔄",
+                        value="Die K/D des Users beträgt: " + str(get_stats_from_db("win", user)))
+    else:
+        embed.add_field(name="🔄", value="Die K/D des Users beträgt: " + str(
+            get_stats_from_db("win", user) / get_stats_from_db("lose", user)))
+
+    return embed
+
 class DcClient(discord.Client):
     async def on_ready(self):
         print('Logged in as', self.user)
@@ -303,49 +355,75 @@ class DcClient(discord.Client):
 
         elif message.content.startswith(prefix + "challenge"):
             args = message.content.split(" ")
-            if not len(args) == 2:
-                await message.channel.send(message.author.mention + "\nDu hast keine Gegner angegeben!")
-            else:
-                opponent = (args[1].replace('<@', '').replace('>', ''))
-                if "!" in opponent:
-                    opponent = opponent.replace('!', '')
-                if "&" in opponent:
-                    await message.channel.send(
-                        message.author.mention + "\nDu hast eine Rolle makiert! Dies ist nicht möglich!")
-                    return
-                opponent = int(opponent)
-                target = message.channel.guild.get_member(opponent)
-                reac_mes = await message.channel.send(
-                    target.mention + ", du wurdest von " + message.author.mention + " herausgefordert! Benutze die Reaktionen!")
-                await reac_mes.add_reaction("✅")
-                await reac_mes.add_reaction("✖")
+            # if not len(args) == 2:
+            #     await message.channel.send(message.author.mention + "\nDu hast keine Gegner angegeben!")
+            # else:
+            #     opponent = (args[1].replace('<@', '').replace('>', ''))
+            #     if "!" in opponent:
+            #         opponent = opponent.replace('!', '')
+            #     if "&" in opponent:
+            #         await message.channel.send(
+            #             message.author.mention + "\nDu hast eine Rolle makiert! Dies ist nicht möglich!")
+            #         return
+            #     opponent = int(opponent)
+            #     target = message.channel.guild.get_member(opponent)
+            #     reac_mes = await message.channel.send(
+            #         target.mention + ", du wurdest von " + message.author.mention + " herausgefordert! Benutze die Reaktionen!")
+            #     await reac_mes.add_reaction("✅")
+            #     await reac_mes.add_reaction("✖")
+            await send_invite(args=args, message=message)
 
         elif message.content == prefix + "stats":
-            embed = discord.Embed(title=f"Statistiken für {message.author.name}#{message.author.discriminator}",
-                                  colour=discord.Colour(0xa6f008), description="Folgend die Statistiken!",
-                                  timestamp=datetime.datetime.utcfromtimestamp(time.time()))
-            embed.set_footer(text="justCoding TicTacToe")
-            embed.add_field(name="🏆",
-                            value="Anzahl der gewonnen Runden: " + str(get_stats_from_db("win", message.author)))
-            embed.add_field(name="💩",
-                            value="Anzahl der verloreren Runden: " + str(get_stats_from_db("lose", message.author)))
+            # embed = discord.Embed(title=f"Statistiken für {message.author.name}#{message.author.discriminator}",
+            #                       colour=discord.Colour(0xa6f008), description="Folgend die Statistiken!",
+            #                       timestamp=datetime.datetime.utcfromtimestamp(time.time()))
+            # embed.set_footer(text="justCoding TicTacToe")
+            # embed.add_field(name="🏆",
+            #                 value="Anzahl der gewonnen Runden: " + str(get_stats_from_db("win", message.author)))
+            # embed.add_field(name="💩",
+            #                 value="Anzahl der verloreren Runden: " + str(get_stats_from_db("lose", message.author)))
+            #
+            # if get_stats_from_db("lose", message.author) == 0:
+            #     embed.add_field(name="🔄",
+            #                     value="Die K/D des Users beträgt: " + str(get_stats_from_db("win", message.author)))
+            # else:
+            #     embed.add_field(name="🔄", value="Die K/D des Users beträgt: " + str(
+            #         get_stats_from_db("win", message.author) / get_stats_from_db("lose", message.author)))
 
-            if get_stats_from_db("lose", message.author) == 0:
-                embed.add_field(name="🔄",
-                                value="Die K/D des Users beträgt: " + str(get_stats_from_db("win", message.author)))
-            else:
-                embed.add_field(name="🔄", value="Die K/D des Users beträgt: " + str(
-                    get_stats_from_db("win", message.author) / get_stats_from_db("lose", message.author)))
-
-            await message.channel.send(content=f"{user.mention}", embed=embed)
+            await message.channel.send(content=f"{user.mention}", embed=await get_stats_embed(user))
 
         elif message.content == "super_geheim":
             add_stats_do_db("win", message.author)
 
-    async def on_reaction_add(self, reaction, user):
+    async def on_reaction_add(self, reaction: discord.Reaction, user: discord.User):
         if user == self.user:
             return
-        if reaction.emoji == "1️⃣":
+        print(reaction.emoji)
+        if reaction.emoji == "♻️":
+            grid = None
+            if "{}#{}".format(user.name, user.discriminator) in playergrids:
+                grid = playergrids["{}#{}".format(user.name, user.discriminator)]
+            elif user in opponents:
+                grid = playergrids["{}#{}".format(opponents[user].name, opponents[user].discriminator)]
+            if user == reaction.message.channel.guild.get_member_named(
+                    grid.player1.name + "#" + grid.player1.discriminator):
+                add_stats_do_db("win", reaction.message.channel.guild.get_member_named(
+                    grid.player2.name + "#" + grid.player2.discriminator))
+                add_stats_do_db("lose", user)
+                await reaction.message.channel.send(reaction.message.channel.guild.get_member_named(
+                    grid.player2.name + "#" + grid.player2.discriminator).mention + "Du hast gewonnen, da " + user.mention + "aufgegeben hat!")
+            else:
+                add_stats_do_db("win", reaction.message.channel.guild.get_member_named(
+                    grid.player1.name + "#" + grid.player1.discriminator))
+                add_stats_do_db("lose", user)
+                await reaction.message.channel.send(
+                    reaction.message.channel.guild.get_member_named(
+                        grid.player1.name + "#" + grid.player1.discriminator).mention + "Du hast gewonnen, da " + user.mention + " aufgegeben hat!")
+            await remove_player_from_list(
+                reaction.message.channel.guild.get_member_named(grid.player1.name + "#" + grid.player1.discriminator))
+            await remove_player_from_list(
+                reaction.message.channel.guild.get_member_named(grid.player2.name + "#" + grid.player2.discriminator))
+        elif reaction.emoji == "1️⃣":
             grid = None
             if "{}#{}".format(user.name, user.discriminator) in playergrids:
                 grid = playergrids["{}#{}".format(user.name, user.discriminator)]
@@ -417,25 +495,6 @@ class DcClient(discord.Client):
                 elif user in opponents:
                     grid = playergrids["{}#{}".format(opponents[user].name, opponents[user].discriminator)]
                 await send_grid(grid, reaction.message.channel)
-        elif reaction.emoji == "♻️":
-            grid = None
-            if "{}#{}".format(user.name, user.discriminator) in playergrids:
-                grid = playergrids["{}#{}".format(user.name, user.discriminator)]
-            elif user in opponents:
-                grid = playergrids["{}#{}".format(opponents[user].name, opponents[user].discriminator)]
-            if user == reaction.message.channel.guild.get_member_named(
-                    grid.player1.name + "#" + grid.player1.discriminator):
-                add_stats_do_db("win", reaction.message.channel.guild.get_member_named(
-                    grid.player2.name + "#" + grid.player2.discriminator))
-                add_stats_do_db("lose", user)
-            else:
-                add_stats_do_db("win", reaction.message.channel.guild.get_member_named(
-                    grid.player1.name + "#" + grid.player1.discriminator))
-                add_stats_do_db("lose", user)
-            await remove_player_from_list(
-                reaction.message.channel.guild.get_member_named(grid.player1.name + "#" + grid.player1.discriminator))
-            await remove_player_from_list(
-                reaction.message.channel.guild.get_member_named(grid.player2.name + "#" + grid.player2.discriminator))
 
         elif reaction.emoji == "✅":
             m = reaction.message.content.replace(', du wurdest von', '').replace(
@@ -449,12 +508,12 @@ class DcClient(discord.Client):
             target = reaction.message.channel.guild.get_member(opponent)
             if target == user:
                 await reaction.message.channel.send(
-                    user.mention + "\nDu kannst dich nicht selber herausfordern. Nutze doch den [KI-Modus](https://www.youtube.com/watch?v=dQw4w9WgXcQ).")
+                    user.mention + "\nDu kannst dich nicht selber herausfordern. Nutze doch den KI-Modus(<https://bit.ly/3fiTwL5>).")
                 return
 
             if target in ingameplayer:
                 await reaction.message.channel.send(
-                    user.mention + "\nDer User, den du herausgefordert hast, ist bereits in einem Match! Sollte dies ein Fehler sein, klicke [hier](https://www.youtube.com/watch?v=dQw4w9WgXcQ)")
+                    user.mention + "\nDer User, den du herausgefordert hast, ist bereits in einem Match! Sollte dies ein Fehler sein, starte den Bot unter diesem Link neu: <<https://bit.ly/3fiTwL5>>")
                 return
 
             userplayers.update({
@@ -483,16 +542,33 @@ client = DcClient(intents=intents)
 slash = SlashCommand(client, sync_commands=True)
 
 
-@slash.slash(name="challenge", guild_ids=[703266392295604254], description="Fordere einen User zu einem Duell heraus!", options=[
+@slash.slash(name="challenge", guild_ids=[703266392295604254], description="Fordere einen User zu einem Duell heraus!",
+             options=[
+                 {
+                     "name": "opponent",
+                     "description": "Specify the opponent you want to fight against",
+                     "type": 6,
+                     "required": True
+                 }
+             ])
+async def _challenge(ctx: SlashContext, user: discord.User):
+    await send_invite(ctx=ctx, user=user)
+
+
+@slash.slash(name="stats", guild_ids=[703266392295604254], description="Zeige deine Statistiken an!", options=[
     {
-        "name": "opponent",
-        "description": "Specify the opponent you want to fight against",
+        "name": "user",
+        "description": "Der User, von dem du die Stats erhalten möchtest.",
         "type": 6,
-        "required": True
+        "required": False
     }
 ])
-async def _test(ctx: SlashContext, user: discord.User):
-    await ctx.send(content=user.name + '#' + user.discriminator, hidden=True)
+async def _stats(ctx: SlashContext, user: discord.User = None):
+    if not user:
+        await ctx.send(embed=await get_stats_embed(ctx.author))
+    else:
+        await ctx.send(embed=await get_stats_embed(user))
+
 
 
 client.run(token)
